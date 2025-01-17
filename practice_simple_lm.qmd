@@ -1,7 +1,7 @@
 ---
 title: "Practice: Simple Linear Regression"
 author: 
-  - "Student Name"
+  - "Brandon Koskie"
   - "DS303, SP25"
   - "Prof. Amber Camp"
 date: 1/17/25
@@ -34,7 +34,7 @@ What is the difference between *y* = *b~0~* + *b~1~x* and *y* = *mx* + *b*, and 
 
 #### Answer:
 
-(write your answer here)
+The first equation is used in statistics and the second equation is used primarily in mathematics.
 
 ### Question 2
 
@@ -42,7 +42,7 @@ Think back to our class discussion and your previous studies in math. Tell me be
 
 #### Answer:
 
-(write your answer here)
+*b~0~* Is the intercept, *b~1~* is the slope for the change in x, and *x* is the independent variable.
 
 ## Let's try it
 
@@ -67,6 +67,9 @@ You can just call upon the data (it's already in the package). I'll get you star
 
 ```{r}
 head(Boston)
+str(Boston)
+summary(Boston)
+cor(Boston)
 
 ```
 
@@ -81,7 +84,7 @@ model <- lm(y ~ x, data=df)
 Use the above basic format to create a linear regression model to predict the **median home value** (medv) based on the **percentage of lower status population** (lstat), using the data from the 'Boston' dataset. Assign it to the variable `lm.model`.
 
 ```{r}
-
+lm.model <- lm(medv ~ lstat, data = Boston)
 ```
 
 If you set it up right, you should be able to run your model name in the below code chunk and view the basic model output. Give it a try:
