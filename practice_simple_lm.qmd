@@ -90,7 +90,7 @@ lm.model <- lm(medv ~ lstat, data = Boston)
 If you set it up right, you should be able to run your model name in the below code chunk and view the basic model output. Give it a try:
 
 ```{r}
-
+lm.model
 ```
 
 ### Question 5
@@ -99,7 +99,7 @@ What is your model output telling you?
 
 #### Answer
 
-(write your answer here)
+The coefficients are being shown to us from the model for making the predictions. The intercept 34.55 shows us the predicted median home value. The lstat -0.95 is the slope showing the change for every 1% increase. The slope is a decrease in median home value.
 
 You can also try `summary(lm.model)`.
 
@@ -113,7 +113,7 @@ What additional information do you get from this summary of the model output?
 
 #### Answer
 
-(write your answer here)
+The residuals show the difference between the observed and predicted values of the median values. It shows the min, median, 1st and 3rd quartile, and the max. The residual error shows us the value of prediction error.
 
 ## confint() and predict()
 
@@ -133,7 +133,7 @@ What do you think the above `confint()` and `predict()` information means? It's 
 
 #### Answer
 
-(write your answer here)
+The above confint() info is the confidence intervals for the coefficients in the linear regression model. The predict() info is the prediction of the mean response for the lstat values.
 
 ## Visualizing
 
@@ -149,7 +149,24 @@ abline(lm.model)
 Can you convert the above code chunk to `ggplot`? Try below. Have fun with editing the appearance of your plot if you'd like :)
 
 ```{r}
+library(ggplot2)
 
+ggplot(data = Boston, aes(x = lstat, y = medv)) +
+  geom_point(color = "blue", alpha = 0.6) + 
+  
+  geom_smooth(method = "lm", color = "red", se = FALSE, linewidth = 1) +
+  
+  labs(
+    title = "Linear Relationship Between LSTAT and MEDV",
+    x = "Percentage of Lower Status Population (LSTAT)",
+    y = "Median Home Value (MEDV in $1000s)"
+  ) +
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10)
+  )
 ```
 
 In a future class, we'll explore some diagnostic plots and what that means for evaluating models. For now, just run the below and have a look:
@@ -175,7 +192,7 @@ What variables are you interested in exploring using a linear regression? Just p
 
 #### Answer
 
-(write your answer here)
+How does the age of the home (x) predict the median value (y)?
 
 ### Question 10
 
@@ -184,10 +201,9 @@ What variables are you interested in exploring using a linear regression? Just p
 Build and run your model, examine the model output:
 
 ```{r}
+lm_age_medv <- lm(medv ~ age, data = Boston)
 
-
-
-
+summary(lm_age_medv)
 ```
 
 #### Part 2
@@ -196,7 +212,7 @@ Explain what you found in plain English. Do your best.
 
 #### Answer
 
-(write your answer here)
+The intercept is 30.98 which means when the age of a home is 0 or brand new then the predicted median home value is about 30.98. Each additional year on the home's age leads to a expected decrease by about 0.123 (\$123). This shows that older homes usually have lower median values. The p-value for the age is very small which means the relationship between age and median value is significant. The R-squared value being 0.1421 means that 14.21% of the variability in median values is explained by the age of the home. This shows that while the age is important, it does not explain a large portion of the variation in home values which means there are other important factors. The residual standard error shows the predictions from this model are off by about 8.527 (\$8,527), this gives a measure on the accuracy of the predictions.
 
 ## The end!
 
