@@ -217,3 +217,16 @@ The intercept is 30.98 which means when the age of a home is 0 or brand new then
 ## The end!
 
 That's it for now. Please feel free to raise questions in class or via email!
+
+Feb 3 classwork
+
+```{r}
+# Multiple regression model with interaction between 'age' and 'rm'
+lm_interaction <- lm(medv ~ age * rm, data = Boston)
+
+# View model summary
+summary(lm_interaction)
+
+```
+
+The coefficients suggest that increased age and rm increase the median value. The model also shows that 55% of the variation in medv shows some variability in the predictions. It also has very low p-values.
