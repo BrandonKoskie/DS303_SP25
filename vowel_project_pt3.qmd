@@ -1,0 +1,194 @@
+---
+title: "Vowel Analysis Final Report"
+author: 
+  - "Brandon Koskie"
+  - "DS303, SP25"
+  - "Prof. Amber Camp"
+date: 3/14/25
+format: html
+toc: true
+editor: visual
+theme: spacelab
+---
+
+## Vowel Analysis Final Report
+
+### Load packages
+
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+library(broom)
+install.packages("phonR")
+install.packages("broom")
+install.packages("lme4")
+library(phonR)
+```
+
+## Load data
+
+Load your personal data (make sure you update from P101 -\> your P#)
+
+```{r}
+# read in data
+P101 <- read_csv("data/P101.csv")
+
+# convert variables to factor where needed
+convert_to_factor <- function(df, cols) {
+  df[cols] <- lapply(df[cols], as.factor)
+  return(df)
+}
+
+P101 <- convert_to_factor(P101, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+P101 <- P101 %>%
+  dplyr::filter(!word %in% c("cot", "caught")) # added dplyr to specify which 'filter' to use
+
+```
+
+Class data:
+
+```{r}
+# read in data
+all_data <- read_csv("data/DS303_combined.csv")
+
+# convert variables to factor where needed
+all_data <- convert_to_factor(all_data, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+all_data <- all_data %>%
+  dplyr::filter(!word %in% c("cot", "caught"))
+
+```
+
+## Explain the Data
+
+(1 point)
+
+In paragraph form:
+
+-   Describe where the data comes from
+-   Summarize the contents of the data (how many observations, participants, items, etc.)
+-   Mention any pre-processing steps taken. For example, I pre-processed this data by removing words that were obviously mispronounced before even sending it to you. Then, above, you converted certain variables to factor and removed the words "cot" and "caught", which are not relevant to your investigation. Have you done any additional processing?
+
+This data comes from a voice data project where the students in a class each record there voices and say different words for each of there own data sets. The total number of participants is 13 and each one underwent 102 observations. The data was pre-processed by having mispronounced and non-relevant words removed from the data set.
+
+## Variables of Interest
+
+(1 point)
+
+For this project, you will explore and analyze the [**class-wide data set**]{.underline}. In paragraph form:
+
+-   Briefly introduce the purpose of this project
+-   Identify and explain your variables of interest
+-   State research questions or hypotheses about this data
+
+The purpose of this project is to analyze the acoustics of the vowels from the students to identify patterns in pronunciation. My primary variables of interest are the main speaker frequency (f0), first formant frequency (f1), and second formant frequency (f2), as they relate to vowel quality and speaker characteristics. Specifically, I aim to explore how certain words exhibit similarities in their acoustic properties and whether specific vowel sounds group together based on these measures. My research question is: Which vowels exhibit the most similarity in terms of pitch (f0) and formant structure (f1, f2), and how do these patterns vary across speakers?
+
+## EDA and Vowel Plots
+
+(3 points)
+
+-   Generate two vowel plots using `phonR`: one for your own data, and one for class data
+
+-   In a couple sentences, state your observations. Do you see any patterns or differences?
+
+-   Include at least one visual that supports your hypothesis/justifies your models below, and explain
+
+I found that in my plot I found that "i" was the outlier in the plot while the rest of the vowels have similar f1 and f2 scores. This is similar with the class plot as "i" is off on its own while the rest of the vowels intersect. It is consistent that vowels a,o, and \^ intersect and that I, u, and Ɛ also intersect which also shows similar f1 and f2 scores. This supports my research questions since we are finding similarities in the vowels already through these patterns.
+
+```{r}
+# Plot personal vowel data
+with(P101, plotVowels(f1, f2, ipa, 
+                      plot.tokens = TRUE, pch.tokens = ipa, cex.tokens = 1.2, alpha.tokens = 0.2, 
+                      plot.means = TRUE, pch.means = ipa, cex.means = 2, 
+                      var.col.by = ipa, ellipse.line = TRUE, pretty = TRUE))
+
+# Plot class vowel data
+with(all_clean, plotVowels(f1, f2, ipa, 
+                           plot.tokens = TRUE, pch.tokens = ipa, cex.tokens = 1.2, alpha.tokens = 0.2, 
+                           plot.means = TRUE, pch.means = ipa, cex.means = 2, 
+                           var.col.by = ipa, ellipse.line = TRUE, pretty = TRUE))
+```
+
+## Model Selection and Justification
+
+(3 points)
+
+-   You will build and analyze **two different statistical models** to investigate the relationship between your predictors and outcome variable
+
+-   The two models should differ in some way (e.g., one could include an additional or interaction term while the other does not)
+
+-   What statistical models will you use to investigate the relationship between your predictors and outcome variable? (linear vs. logistic regression? mixed effects model?)
+
+-   Why did you select these models?
+
+-   Which variable(s) are included?
+
+My linear and mixed model will look into the relationship between vowel characteristics and pitch levels. Th linear model will examine the direct relationship between vowel formants (f1, f2) and the main pitch of the speakers voice (f0). It assumes a linear relationship and does not account for individual speaker variability. The mixed model will extend the linear regression by including participant (ppt) as a random effect. This accounts for variability in individual speech patterns. Linear regression is the beginning point to see the general relationship between vowel formants and the main pitch. The mixed effects model accounts for repeated measures per speaker, which is important since each participant recorded multiple vowels. By comparing these models, I can assess whether speaker differences significantly impact vowel acoustics.
+
+```{r}
+linear_model <- lm(f0 ~ f1 + f2 + word, data = all_data)
+summary(linear_model)
+
+mixed_model <- lmer(f0 ~ f1 + f2 + word + (1 | ppt), data = all_data)
+summary(mixed_model)
+```
+
+## Model Comparisons and Best Fit
+
+(3 points)
+
+-   Build and run both models and display their summaries
+
+-   Compare the two models, assess model fit, and determine the better fitting one
+
+The mixed model has the better AIC score since it is lower.
+
+```{r}
+linear_model <- lm(f0 ~ f1 + f2 + word, data = all_clean)
+summary(linear_model)
+
+mixed_model <- lmer(f0 ~ f1 + f2 + word + (1 | ppt), data = all_clean)
+summary(mixed_model)
+
+AIC(linear_model, mixed_model)
+anova(mixed_model)
+```
+
+## Interpretation of Results
+
+(3 points)
+
+-   Interpret coefficients and significance
+-   Explain how the predictor variable(s) influence the outcome
+
+Linear model:
+
+For the intercept, the estimated baseline pitch is -250.6. f1: The coefficient for f1 (first formant) is 0.2326, meaning that for every unit increase in f1, the pitch increases by about 0.23. f2: The coefficient for f2 (second formant) is 0.1140, indicating a positive relationship with the main pitch. For word effect, there are significant effects for many words (like "wordbead", "wordbed", "wordboat", etc.) which have different pitch values compared to the reference level (presumably "wordbat"). The adjusted R-squared is 0.5198 which means the model explains about 52% of the variation in pitch.
+
+Mixed Model:
+
+For random effects, variance for ppt (participant) is 2497.3, and the residual variance is 193.6. This suggests that participant variability is a significant contributor to pitch variation. For fixed effects, similar to the linear model, but now accounting for participant variability. Some word effects are still significant (e.g., "wordboat", "wordbode"), while others are not (e.g., "wordbat"). For fixed effects for f2, the f2 coefficient remains significant (p = 0.000915), but f1 is not (p = 0.2567).
+
+Model Comparison (AIC):
+
+Linear Model AIC: 8543.37
+
+Mixed Model AIC: 6901.72
+
+The mixed model has a lower AIC, indicating it provides a better fit to the data than the linear model.
+
+## Discussion and Conclusion
+
+(3 points)
+
+-   Summarize key findings
+-   Discuss implications
+-   Mention limitations
+
+The study found that f2 (the second formant) is a significant predictor of pitch, with higher f2 values generally correlating with higher pitch levels. However, f1 did not show a significant impact in the mixed-effects model. Words also played a significant role in determining pitch, with specific words such as "wordboat" and "wordbed" exhibiting higher pitch levels compared to others, suggesting that their phonetic structure influences pitch. Individual variability in pitch production was evident, with significant random effects for participants, this highlights the need for personalized models in speech analysis.
+
+These findings have implications for speech synthesis, phonetic research, and speech therapy. Understanding how formants and words affect pitch could lead to more natural-sounding synthesized speech and better-targeted speech interventions. The study's limitations include a simplified model, a limited dataset. The inclusion of more factors and a larger, more diverse dataset could provide deeper insights into pitch variation and improve the generalizability of the findings.
