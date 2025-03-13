@@ -20,9 +20,9 @@ library(tidyverse)
 library(lme4)
 library(lmerTest)
 library(broom)
-install.packages("phonR")
-install.packages("broom")
-install.packages("lme4")
+#install.packages("phonR")
+#install.packages("broom")
+#install.packages("lme4")
 library(phonR)
 ```
 
@@ -61,6 +61,16 @@ all_data <- convert_to_factor(all_data, c("ppt", "word", "ipa", "arpa", "onset",
 all_data <- all_data %>%
   dplyr::filter(!word %in% c("cot", "caught"))
 
+```
+```{r}
+## remove outliers
+all_clean <- all_data %>%
+  group_by(ppt, ipa) %>% # notice that we added ppt as a grouping
+  mutate(
+    f1_z = (f1 - mean(f1)) / sd(f1),
+    f2_z = (f2 - mean(f2)) / sd(f2)
+  ) %>%
+  filter(abs(f1_z) <= 1.25, abs(f2_z) <= 1.25)
 ```
 
 ## Explain the Data
