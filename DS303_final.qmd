@@ -1,0 +1,231 @@
+---
+title: "Comparing Linear Models for SDG 14: Trawling in the Latin America and Carribean region"
+author: "Brandon Koskie"
+format: 
+  revealjs:
+    theme: simple
+    slide-number: true
+    transition: fade
+    chalkboard: true
+    toc: true
+    toc-depth: 2
+    incremental: true
+editor: visual
+---
+
+## Introduction to Latin America and the Carribean
+
+-   🐟 Fisheries in Latin America and the Caribbean
+
+    -    🌊 **LAC is one of the world's richest marine biodiversity regions**, with vast coastlines, coral reefs, and exclusive economic zones.
+
+    -    🐠 **Fisheries support millions of livelihoods**, especially in small island developing states and coastal communities.
+
+    -    🍽️ **Overfishing and illegal, unreported, and unregulated (IUU) fishing** threaten marine ecosystems and food security.
+
+    -    ⚖️ **Trawling is common** in the region but is often unsustainable, contributing to bycatch and habitat degradation.
+
+    -    📉 **Fish stocks in many countries are declining**, with several species listed as overexploited.
+
+    -    🛡️ **Marine protected areas (MPAs)** are expanding but vary in enforcement and effectiveness across countries.
+
+    -    📊 **Monitoring and data collection are limited**, making it difficult to evaluate the impact of conservation efforts.
+
+-   SDG 14: Life Below Water
+
+    ## Why This Matters
+
+    -   **Overfishing** and **marine ecosystem degradation** threaten food security, tourism, and livelihoods.
+    -   Understanding key predictors of SDG 14 can help target policy and conservation efforts.
+    -   Regression modeling helps identify high-impact factors.\
+        \
+
+------------------------------------------------------------------------
+
+# 
+
+## Research Question
+
+**Does adding more indicators improve predictive performance of trawling activity?**
+
+We compare two models:
+
+-   **Model 1**: Marine Protected Areas + Discarded Fish\
+-   **Model 2**: Model 1 + Fish Stocks + Clean Water
+
+------------------------------------------------------------------------
+
+# Data and Variables
+
+-   Source: 2023 Sustainable Development Report (SDR)
+-   Country-level, normalized indicators (0–100 scale)
+-   **Target Variable**: SDG 14 Trawling Indicator\
+-   **Predictors**:
+    -   Marine Protected Areas
+    -   Discarded Fish
+    -   Fish Stocks
+    -   Coastal Population
+
+------------------------------------------------------------------------
+
+```{r}
+
+library(tidyverse)
+
+# Load your dataset
+data <- read_csv("SDR-2023-Data.csv")
+
+# Filter for Caribbean countries using the region column
+LAC_data <- data %>%
+  filter(`Regions used for the SDR` == "LAC")
+
+
+```
+
+```{r}
+# Select relevant columns and rename them
+LAC_data_renamed <- LAC_data %>%
+  select(
+    `Country`, 
+    `normalized_score_sdg14_trawl` = `Normalized Score: sdg14_trawl`,
+    `normalized_score_sdg14_discard` = `Normalized Score: sdg14_discard`,
+    `normalized_score_sdg14_cpma` = `Normalized Score: sdg14_cpma`,
+    `normalized_score_sdg14_fishstocks` = `Normalized Score: sdg14_fishstocks`,
+    `normalized_score_sdg14_cleanwat` = `Normalized Score: sdg14_cleanwat`
+  )
+
+```
+
+```{r}
+# Preview the first few rows of the renamed data
+head(LAC_data_renamed)
+```
+
+## Models
+
+```{r}
+# Remove rows with any missing values
+LAC_data_clean <- LAC_data_renamed %>% drop_na()
+
+# Model 1: Simple model with only discarded fish and marine protected areas
+m1 <- lm(normalized_score_sdg14_trawl ~ normalized_score_sdg14_discard + normalized_score_sdg14_cpma,
+         data = LAC_data_clean)
+summary(m1)
+
+# Model 2: Add fish stocks and clean water
+m2 <- lm(normalized_score_sdg14_trawl ~ normalized_score_sdg14_discard + normalized_score_sdg14_cpma +
+           normalized_score_sdg14_fishstocks + normalized_score_sdg14_cleanwat,
+         data = LAC_data_clean)
+summary(m2)
+
+# Compare models using AIC
+AIC(m1, m2)
+
+# Compare models using ANOVA (nested comparison)
+anova(m1, m2)
+
+```
+
+## Results
+
+### Model 1:
+
+1.  **Coefficients**:
+
+-   **Intercept:** 69.02 (p-value: 0.000225)\
+    The intercept is significant, indicating the baseline value for `normalized_score_sdg14_trawl` when both predictors (`normalized_score_sdg14_discard` and `normalized_score_sdg14_cpma`) are zero.
+
+-   **normalized_score_sdg14_discard:** 0.335 (p-value: 0.031)\
+    This predictor is statistically significant. For each unit increase in `normalized_score_sdg14_discard`, the `normalized_score_sdg14_trawl` is expected to increase by 0.335 units, assuming other factors remain constant.
+
+-   **normalized_score_sdg14_cpma:** -0.166 (p-value: 0.502)\
+    This predictor is **not statistically significant** (p-value \> 0.05). This suggests that `normalized_score_sdg14_cpma` does not have a significant effect on `normalized_score_sdg14_trawl` after controlling for the other variables.
+
+2.  **Model fit:**
+
+    -   **Residual standard error:** 20.28\
+        This is the standard deviation of the residuals (the differences between observed and predicted values), indicating how much variability there is around the fitted regression line.
+
+    <!-- -->
+
+    -   **Multiple R-squared:** 0.2918\
+        This indicates that about **29%** of the variance in `normalized_score_sdg14_trawl` is explained by `normalized_score_sdg14_discard` and `normalized_score_sdg14_cpma`.
+
+    <!-- -->
+
+    -   **Adjusted R-squared:** 0.1907\
+        This is a more conservative estimate of model fit, adjusting for the number of predictors. It suggests that about **19%** of the variance in `normalized_score_sdg14_trawl` is explained by the model.
+
+    <!-- -->
+
+    -   **F-statistic:** 2.885 (p-value: 0.08931)\
+        The F-statistic tests if the model is a good fit. The p-value is greater than 0.05, indicating that the model is not statistically significant at the 5% level. This means the model does not explain the data well.
+
+### Model 2:
+
+1.  **Coefficients:**
+
+    -   **Intercept:** 32.29 (p-value: 0.2788)\
+        The intercept is not statistically significant, meaning it doesn't provide meaningful information in this context.
+
+    <!-- -->
+
+    -   **normalized_score_sdg14_discard:** 0.371 (p-value: 0.0122)\
+        This predictor is statistically significant. For each unit increase in `normalized_score_sdg14_discard`, the `normalized_score_sdg14_trawl` is expected to increase by 0.371 units, assuming other factors remain constant.
+
+    <!-- -->
+
+    -   **normalized_score_sdg14_cpma:** -0.330 (p-value: 0.1625)\
+        This predictor is **not statistically significant** (p-value \> 0.05), suggesting that `normalized_score_sdg14_cpma` does not contribute significantly to explaining `normalized_score_sdg14_trawl`.
+
+    <!-- -->
+
+    -   **normalized_score_sdg14_fishstocks:** 0.561 (p-value: 0.0384)\
+        This predictor is statistically significant. For each unit increase in `normalized_score_sdg14_fishstocks`, the `normalized_score_sdg14_trawl` is expected to increase by 0.561 units, assuming other factors remain constant.
+
+    <!-- -->
+
+    -   **normalized_score_sdg14_cleanwat:** 0.058 (p-value: 0.864)\
+        This predictor is **not statistically significant**. This suggests that `normalized_score_sdg14_cleanwat` does not have a meaningful effect on `normalized_score_sdg14_trawl`.
+
+2.  **Model fit:**
+
+    -   **Residual standard error:** 17.83\
+        This is a slightly lower residual standard error compared to Model 1, suggesting that Model 2 fits the data slightly better.
+
+    <!-- -->
+
+    -   **Multiple R-squared:** 0.5306\
+        This model explains **53%** of the variance in `normalized_score_sdg14_trawl`, which is a much better fit than Model 1 (29%).
+
+    <!-- -->
+
+    -   **Adjusted R-squared:** 0.3742\
+        This indicates that about **37%** of the variance in `normalized_score_sdg14_trawl` is explained by this model, adjusted for the number of predictors.
+
+    <!-- -->
+
+    -   **F-statistic:** 3.392 (p-value: 0.04473)\
+        This p-value is **significant**, meaning that Model 2 is a statistically significant model at the 5% level, and it explains the variation in `normalized_score_sdg14_trawl`.
+
+### Model Comparison:
+
+**AIC (Akaike Information Criterion):**
+
+-   **Model 1 (AIC = 155.27)**
+
+-   **Model 2 (AIC = 152.28)** The lower AIC value for Model 2 indicates that it provides a better fit with fewer penalties for the additional parameters, making it a more efficient model.
+
+    **ANOVA Comparison:**
+
+    -   **p-value: 0.08476** (from the F-test comparing Model 1 and Model 2)
+
+    -   This suggests that adding the additional predictors (`normalized_score_sdg14_fishstocks` and `normalized_score_sdg14_cleanwat`) improves the model, but not significantly at the 5% level.
+
+### Conclusion:
+
+-   **Model 2** (with four predictors) explains more of the variance in `normalized_score_sdg14_trawl` (53%) than Model 1 (29%).
+
+-   The **statistically significant predictors** in Model 2 are `normalized_score_sdg14_discard` and `normalized_score_sdg14_fishstocks`.
+
+-   While Model 2 is a better fit based on AIC and R-squared, the F-test and p-value suggest that the improvement is marginal.
