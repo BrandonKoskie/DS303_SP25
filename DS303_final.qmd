@@ -1,35 +1,34 @@
 ---
-title: "Comparing Linear Models for SDG 14: Trawling in the Latin America and Carribean region"
+title: "Comparing Linear Models for SDG 14: Trawling in the Latin America and Caribbean region"
 author: "Brandon Koskie"
 format: 
   revealjs:
     theme: simple
     slide-number: true
     transition: fade
-    chalkboard: true
+    scrollable: true
     toc: true
     toc-depth: 2
-    incremental: true
 editor: visual
 ---
 
-## Introduction to Latin America and the Carribean
+## Introduction to Latin America and the Caribbean
 
 -   🐟 Fisheries in Latin America and the Caribbean
 
-    -    🌊 **LAC is one of the world's richest marine biodiversity regions**, with vast coastlines, coral reefs, and exclusive economic zones.
+    -   🌊 **LAC is one of the world's richest marine biodiversity regions**, with vast coastlines, coral reefs, and exclusive economic zones.
 
-    -    🐠 **Fisheries support millions of livelihoods**, especially in small island developing states and coastal communities.
+    -   🐠 **Fisheries support millions of livelihoods**, especially in small island developing states and coastal communities.
 
-    -    🍽️ **Overfishing and illegal, unreported, and unregulated (IUU) fishing** threaten marine ecosystems and food security.
+    -   🍽️ **Overfishing and illegal, unreported, and unregulated (IUU) fishing** threaten marine ecosystems and food security.
 
-    -    ⚖️ **Trawling is common** in the region but is often unsustainable, contributing to bycatch and habitat degradation.
+    -   ⚖️ **Trawling is common** in the region but is often unsustainable, contributing to bycatch and habitat degradation.
 
-    -    📉 **Fish stocks in many countries are declining**, with several species listed as overexploited.
+    -   📉 **Fish stocks in many countries are declining**, with several species listed as overexploited.
 
-    -    🛡️ **Marine protected areas (MPAs)** are expanding but vary in enforcement and effectiveness across countries.
+    -   🛡️ **Marine protected areas (MPAs)** are expanding but vary in enforcement and effectiveness across countries.
 
-    -    📊 **Monitoring and data collection are limited**, making it difficult to evaluate the impact of conservation efforts.
+    -   📊 **Monitoring and data collection are limited**, making it difficult to evaluate the impact of conservation efforts.
 
 -   SDG 14: Life Below Water
 
@@ -229,3 +228,41 @@ anova(m1, m2)
 -   The **statistically significant predictors** in Model 2 are `normalized_score_sdg14_discard` and `normalized_score_sdg14_fishstocks`.
 
 -   While Model 2 is a better fit based on AIC and R-squared, the F-test and p-value suggest that the improvement is marginal.
+
+Predicted vs Actual Scores for Trawling
+
+### What Are Normalized Predictors?
+
+-   **Normalized predictors** are values that have been **scaled to a common range**, often **0 to 100**.
+
+-   This helps when comparing countries with different raw values (e.g., a small island vs. Brazil).
+
+-   Normalization removes bias from different units (like tons of fish vs. square km of protected ocean).
+
+-   Example: “Normalized Score: sdg14_fishstocks” = a country’s performance relative to others on fish stock sustainability.
+
+## Predicted vs. Actual Plot
+
+```{r}
+# Predicted vs. actual for Model 2
+LAC_data_clean$predicted_trawl <- predict(m2)
+
+ggplot(LAC_data_clean, aes(x = predicted_trawl, y = normalized_score_sdg14_trawl)) +
+  geom_point(size = 3, color = "#0072B2") +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "gray50") +
+  labs(
+    title = "Predicted vs. Actual SDG 14 Trawling Scores",
+    x = "Predicted Trawling Score",
+    y = "Actual Trawling Score"
+  ) +
+  theme_minimal()
+
+```
+
+### What this shows:
+
+-   Each point is a country in the LAC region.
+
+-   The closer a point is to the dashed line, the more accurate the prediction.
+
+-   Helps us **see how well Model 2 performs.**
